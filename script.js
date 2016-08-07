@@ -1,48 +1,55 @@
+//Все необходимые константы для рисования областей на экране
 
+//Координаты и размеры всего полотна
 var xCanvas = 0;
 var yCanvas = 0;
 var heightCanvas = 640;
 var widthCanvas = 1460;
 
+//Координаты и размеры области столкновений шаров
 var xField = 20;
 var yField = 20;
 var heightField = 600;
 var widthField = 1000;
 
+//Координаты и размеры области в которой находятся ожидающие шары
 var xStore = 1040;
 var yStore = 20;
 var heightStore = 600;
 var widhtStore = 400;
 
+//Координаты и размеры меню
 var xMenu = 1500;
 var yMenu = 0;
 var heightMenu = 640;
 var widthMenu = 300;
 
-var X = 0;
-var Y = 0;
-
-var PX = -100;
-var PY = -100
-
+//Массивы шаров находящихся в двух областях
+var countStoreBalls = 0;
 var storeBalls = [];
+var countFieldBalls = 0;
 var fieldBalls = [];
+
+//Перетаскиваемый шар
+var draggedBall = null;
 
 var Canvas = document.getElementById("TestCanvas");
 var Context = Canvas.getContext('2d');
 
-
-function Ball(r, x, y, vx, vy){
+//Класс описывающий объект шара на экране
+function Ball(rad, coordX, coordY, speedX, speedY){
 	
-	var x = x;
-	var y = y;
-	var vx = vx;
-	var vy = vy;
-	var r = r;
+	this.x = coordX;
+	this.y = coordY;
+	this.vx = speedX;
+	this.vy = speedY;
+	this.r = rad;
+	
+	var self = this;
 	
 	this.drawBall = function(Context){
 		Context.beginPath();
-		Context.arc(x, y, r, 0, 2 * Math.PI, false);
+		Context.arc(self.x, self.y, self.r, 0, 2 * Math.PI, false);
 		Context.fill();
 	};
 }
@@ -51,11 +58,15 @@ function initStore(){
 	
 	for(i=0; i<5; i++){
 		storeBalls[i] = new Ball(15, xStore + i * 20 + 20 , yStore + i * 20 + 20, 0, 0);
+		countStoreBalls++;
 	}
 }
 
 function drawCanvas(){
 	Context.strokeRect(0, 0, widthCanvas, heightCanvas);
+	if(draggedBall != null){
+		draggedBall.drawBall(Context);
+	}
 }
 
 function drawField(){
@@ -65,7 +76,7 @@ function drawField(){
 function drawStore(){
 	Context.strokeRect(xStore, yStore, widhtStore, heightStore);
 	
-	for(i = 0; i < 5; i++){
+	for(i = 0; i < countStoreBalls; i++){
 		storeBalls[i].drawBall(Context);
 	}
 }
@@ -79,48 +90,62 @@ function Draw() {
 		drawField();
 		drawStore();
 		drawMenu();
-		//Context.fillRect(X, Y, 20, 20);
-}
-
-function Calculate(){
-	
-	if(X < 50)
-	{
-		X += 1;
-		Y += 1;
-	}
-	else
-	{
-		X = 0;
-		Y = 0;
-	}
 }
 
 function Clear(){
-	//Context.clearRect(0, 0, 600, 600);
-	Context.clearRect(X, Y, widthCanvas, heightCanvas);
+	Context.clearRect(0, 0, widthCanvas, heightCanvas);
 }
 
 function Render(){
 	Clear();
-	//Calculate();
 	Draw();
+}
+
+function mouseDownHandler(event){
+	
+	var mouseX = event.clientX;
+	var mouseY = event.clientY;
+	
+	for(i = 0; i < countStoreBalls; i++){
+		var xBall = storeBalls[i].x;
+		var yBall = storeBalls[i].y;
+		var rBall = storeBalls[i].r;
+		
+		if( Math.pow((mouseX - xBall),2) + Math.pow((mouseY - yBall),2) <= Math.pow(rBall,2) ){
+			draggedBall = storeBalls[i];
+			storeBalls.splice(i, 1);
+			countStoreBalls--;
+			break;
+		}
+	}
+	
+	for(i = 0; i < countFieldBalls; i++){
+		var xBall = fieldBalls[i].x;
+		var yBall = fieldBalls[i].y;
+		var rBall = fieldBalls[i].r;
+		
+		if( Math.pow((mouseX - xBall),2) + Math.pow((mouseY - yBall),2) <= Math.pow(rBall,2) ){
+			draggedBall = fieldBalls[i];
+			fieldBalls.splice(i, 1);
+			countFieldBalls--;
+			break;
+		}
+	}
+}
+
+function mouseMoveHandler(event){
+	
+	if(draggedBall != null){
+		draggedBall.x = event.clientX;
+		draggedBall.y = event.clientY;
+	}
+}
+
+function mouseUpHandler(event){
 	
 }
 
-function Test(event){
-	Context.clearRect(PX, PY, 50, 10);
-	
-	var XE = event.clientX;
-	var YE = event.clientY;
-	PX = XE;
-	PY = YE;
-	
-	Context.moveTo(XE,YE);
-	Context.fillRect(XE, YE, 50, 10);
-	Context.moveTo(0,0);
-}
-
+Canvas.onmousedown = mouseDownHandler;
+Canvas.onmousemove = mouseMoveHandler;
 initStore();
-//document.getElementById("TestCanvas").onmousemove = Test;
 setInterval(Render,20);
