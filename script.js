@@ -102,9 +102,9 @@ function Render(){
 }
 
 function mouseDownHandler(event){
-	
-	var mouseX = event.clientX;
-	var mouseY = event.clientY;
+	//костыль для указателя мыши, ибо приходящая в событии находится не на кончике стрелки на экране
+	var mouseX = event.clientX - 7;
+	var mouseY = event.clientY - 7;
 	
 	for(i = 0; i < countStoreBalls; i++){
 		var xBall = storeBalls[i].x;
@@ -142,10 +142,15 @@ function mouseMoveHandler(event){
 }
 
 function mouseUpHandler(event){
-	
+	if(draggedBall != null){
+		storeBalls[countStoreBalls] = draggedBall;
+		countStoreBalls++;
+		draggedBall = null;
+	}
 }
 
 Canvas.onmousedown = mouseDownHandler;
+Canvas.onmouseup = mouseUpHandler;
 Canvas.onmousemove = mouseMoveHandler;
 initStore();
 setInterval(Render,20);
