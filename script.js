@@ -1,5 +1,9 @@
 //Все необходимые константы для рисования областей на экране
 
+//Размеры всей канвы
+var height = 640;
+var width = 1800;
+
 //Координаты и размеры всего полотна
 var xCanvas = 0;
 var yCanvas = 0;
@@ -54,10 +58,116 @@ function Ball(rad, coordX, coordY, speedX, speedY){
 	};
 }
 
+function vector2D(x, y){
+	this.x = x;
+	this.y = y;
+	
+	var self = this;
+	
+	function length(){
+		return Math.sqrt( pow(self.x, 2) + pow(self.y, 2));
+	}
+	
+	function scalarMultiply(vector){
+		return (self.x * vector.x + self.y + vector.y);
+	}
+	
+	function cosAngle(vector){
+		return ((self.length() * vector.length()) / self.scalarMultiply(vector))	
+	}
+	
+	function normalize(){
+		var length = self.length();
+		self.x = self.x / length;
+		self.y = self.y / length;
+	}
+}
+
+function calculateCollisionWithBorders(){
+	for(i = 0; i < countFieldBalls; i++){
+		
+		var CoefExtrude = 1;
+		var xBall = fieldBalls[i].x;
+		var yBall = fieldBalls[i].y;
+		var rBall = fieldBalls[i].r;
+		
+		
+		if( (xBall - rBall) <= xField ){
+			fieldBalls[i].x = xField + rBall + CoefExtrude;
+			fieldBalls[i].vx *= -1;
+		} 
+		
+		if( (xBall + rBall) >= (xField + widthField) ){
+			fieldBalls[i].x = xField - rBall + widthField - CoefExtrude;
+			fieldBalls[i].vx *= -1;	
+		} 
+		
+		if( (yBall - rBall) <= yField ){
+			fieldBalls[i].y = yField + rBall + CoefExtrude;
+			fieldBalls[i].vy *= -1;
+			
+		} 
+		
+		if( (yBall + rBall) >= (yField + heightField) ){
+			fieldBalls[i].y = yField - rBall + heightField - CoefExtrude;
+			fieldBalls[i].vy *= -1;	
+		} 
+	}
+}
+
+function calculateCollisionBallsWithBalls(){
+	for(i = 0; i < countFieldBalls; i++){
+		
+		for(j = i + 1; j < countFieldBalls; j++){
+			
+			var xBall1 = fieldBalls[i].x;
+			var yBall1 = fieldBalls[i].y;
+			var rBall1 = fieldBalls[i].r;
+			var speed1 = vector2D(fieldBalls[i].vx, fieldBalls[i].vy);
+			
+			var xBall2 = fieldBalls[j].x;
+			var yBall2 = fieldBalls[j].y;
+			var rBall2 = fieldBalls[j].r;
+			var speed2 = vector2D(fieldBalls[j].vx, fieldBalls[j].vy);
+			
+			var requiredDistanse = rBall1 + rBall2;
+			var currentDistanse = Math.sqrt( pow((xBall1 - xBall2), 2) + pow((yBall1 - yBall2), 2)); 
+			
+			if(currentDistanse <= requiredDistanse){
+				var axis = vector2D(xBall1-xBall2, yBall1-yBall2);
+				var speed = vector2D(fieldBalls[i].vx + fieldBalls[j].vx, fieldBalls[i].vy + fieldBalls[j].vy).length();
+				var cosAngle = speed1.cosAngle(speed2);
+				
+				if( cosAngle > ((Math.PI)/2) ){
+					
+					
+					
+				}
+				else{
+					
+					
+				}
+			}
+		}
+	}
+}
+
+function calculatePositions(){
+	for(i = 0; i < countFieldBalls; i++){
+		fieldBalls[i].x += fieldBalls[i].vx;
+		fieldBalls[i].y += fieldBalls[i].vy;
+	}
+}
+
+function calculate(){
+	calculatePositions();
+	calculateCollisionWithBorders();
+}
+
 function initStore(){
 	
 	for(i=0; i<5; i++){
-		storeBalls[i] = new Ball(15, xStore + i * 20 + 20 , yStore + i * 20 + 20, 0, 0);
+		storeBalls[i] = new Ball(15, xStore + i * 20 + 20 , yStore + i * 20 + 20, 1, 1);
 		countStoreBalls++;
 	}
 }
@@ -71,6 +181,10 @@ function drawCanvas(){
 
 function drawField(){
 	Context.strokeRect(xField, yField, widthField, heightField);
+	
+	for(i = 0; i < countFieldBalls; i++){
+		fieldBalls[i].drawBall(Context);
+	}
 }
 
 function drawStore(){
@@ -85,20 +199,21 @@ function drawMenu(){
 	Context.strokeRect(xMenu, yMenu, widthMenu, heightMenu);
 }
 
-function Draw() {
+function draw() {
 		drawCanvas();
 		drawField();
 		drawStore();
 		drawMenu();
 }
 
-function Clear(){
-	Context.clearRect(0, 0, widthCanvas, heightCanvas);
+function clear(){
+	Context.clearRect(0, 0, width, height);
 }
 
-function Render(){
-	Clear();
-	Draw();
+function render(){
+	clear();
+	calculate();
+	draw();
 }
 
 function mouseDownHandler(event){
@@ -143,9 +258,23 @@ function mouseMoveHandler(event){
 
 function mouseUpHandler(event){
 	if(draggedBall != null){
-		storeBalls[countStoreBalls] = draggedBall;
-		countStoreBalls++;
-		draggedBall = null;
+		var xBall = draggedBall.x;
+		var yBall = draggedBall.y;
+		
+		if( ((xBall >= xField) && (xBall <= xField + widthField)) && ((yBall >= yField) && (yBall <= yField + heightField)) ){
+			fieldBalls[countFieldBalls] = draggedBall;
+			countFieldBalls++;
+			draggedBall = null;
+			  
+		  }
+		else{
+			draggedBall.x = xStore + widhtStore - 100;
+			draggedBall.y = yStore + heightStore - 100;
+			storeBalls[countStoreBalls] = draggedBall;
+			countStoreBalls++;
+			draggedBall = null;
+		}	
+		
 	}
 }
 
@@ -153,4 +282,4 @@ Canvas.onmousedown = mouseDownHandler;
 Canvas.onmouseup = mouseUpHandler;
 Canvas.onmousemove = mouseMoveHandler;
 initStore();
-setInterval(Render,20);
+setInterval(render,20);
