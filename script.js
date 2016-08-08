@@ -1,7 +1,7 @@
 //Все необходимые константы для рисования областей на экране
 
 //Размеры всей канвы
-var height = 640;
+var height = 800;
 var width = 1920;
 
 //Координаты и размеры всего полотна
@@ -19,14 +19,14 @@ var widthField = 1000;
 //Координаты и размеры области в которой находятся ожидающие шары
 var xStore = 1040;
 var yStore = 20;
-var heightStore = 600;
+var heightStore = 300;
 var widhtStore = 400;
 
 //Координаты и размеры меню
-var xMenu = 1500;
-var yMenu = 0;
-var heightMenu = 640;
-var widthMenu = 300;
+var xMenu = 1040;
+var yMenu = 340;
+var heightMenu = 280;
+var widthMenu = 400;
 
 //Массивы шаров находящихся в двух областях
 var countStoreBalls = 0;
@@ -36,10 +36,10 @@ var fieldBalls = [];
 
 //Текущее положение стика управления скоростью и направлением движения шарика
 var xStick = xMenu + widthMenu / 2;
-var yStick = yMenu + heightMenu / 3;
+var yStick = yMenu + heightMenu / 2;
 var stickAllocated = 0;
 var xCenterStick = xMenu + widthMenu / 2;
-var yCenterStick = yMenu + heightMenu / 3;
+var yCenterStick = yMenu + heightMenu / 2;
 
 //Перетаскиваемый шар
 var draggedBall = null;
@@ -67,6 +67,7 @@ function Ball(rad, coordX, coordY, speedX, speedY){
 	};
 }
 
+//Класс двумерного вектора
 function vector2D(x, y){
 	this.x = x;
 	this.y = y;
@@ -90,17 +91,17 @@ function vector2D(x, y){
 		self.x = self.x / length;
 		self.y = self.y / length;
 	}
-	
+	//умножение вектора на число
 	this.multiply = function(value){
 		var result = new vector2D(self.x * value, self.y * value)
 		return result;
 	}
-	
+	//сложение векторов
 	this.plus = function(vector){
 		var result = new vector2D(self.x + vector.x, self.y + vector.y)
 		return result;
 	}
-	
+	//проверка на не превышение максимального значения
 	this.checkMax = function(maxValue){
 		if(self.x > maxValue){
 			self.x = maxValue;
@@ -116,6 +117,22 @@ function vector2D(x, y){
 			self.y = -maxValue;
 		}
 	}
+	//проверка на не превышение максимального значения
+	this.checkMin = function(minValue){
+		if(self.x < minValue && self.x >= 0 ){
+			self.x = minValue;
+		}
+		if(self.x > -minValue && self.x < 0){
+			self.x = -minValue;
+		}
+		
+		if(self.y < minValue && self.y >= 0){
+			self.y = minValue;
+		}
+		if(self.y > -minValue && self.y < 0){
+			self.y = -minValue;
+		}
+	}
 }
 
 function calculateCollisionWithBorders(){
@@ -126,7 +143,8 @@ function calculateCollisionWithBorders(){
 		var yBall = fieldBalls[i].y;
 		var rBall = fieldBalls[i].r;
 		
-		
+		//определяем столкнулся ли шар со стеной
+		//если столкнулся - меняем нужную составляющую скорости на противоположную
 		if( (xBall - rBall) <= xField ){
 			fieldBalls[i].x = xField + rBall + CoefExtrude;
 			fieldBalls[i].vx *= -1;
@@ -198,13 +216,18 @@ function calculateCollisionsBallsWithBallsIntoStore(){
 			var requiredDistanse = rBall1 + rBall2;
 			var currentDistanse = Math.sqrt( Math.pow((xBall1 - xBall2), 2) + Math.pow((yBall1 - yBall2), 2)); 
 			
+			//определяем коллизию шаров путем сравнения расстояния между их центрами
 			if(currentDistanse <= requiredDistanse){
+				//оси соединяющие центры шаров
+				//одна направлена к первому шару другая ко второму
 				var axis2 = (new vector2D(xBall2-xBall1, yBall2-yBall1));
 				var axis1 = (new vector2D(xBall1-xBall2, yBall1-yBall2));
 	
+				
 				axis1.normalize();
 				axis2.normalize();
 				
+				//производит расталкивание шаров вдоль оси содиняющей центры шаров
 				storeBalls[i].x += axis1.x * 2;
 				storeBalls[i].y += axis1.y * 2;
 				
@@ -232,31 +255,32 @@ function calculateCollisionBallsWithBalls(){
 			var requiredDistanse = rBall1 + rBall2;
 			var currentDistanse = Math.sqrt( Math.pow((xBall1 - xBall2), 2) + Math.pow((yBall1 - yBall2), 2)); 
 			
+			//проверяем дистанцию между шарами 
 			if(currentDistanse <= requiredDistanse){
 				var axis2 = (new vector2D(xBall2-xBall1, yBall2-yBall1));
 				var axis1 = (new vector2D(xBall1-xBall2, yBall1-yBall2));
 				
 				var currentSpeedVector = speed1.plus(speed2);
+				//значение скоростей шаров после соударения (принимаем как равную)
 				var currentSpeed = currentSpeedVector.length();
 				
+				//получаем вектора скоростей шаров после соударения
 				var vectorSpeed1 = speed1.plus(axis1);
 				vectorSpeed1.normalize(); 
-				
 				var vectorSpeed2 = speed2.plus(axis2);
 				vectorSpeed2.normalize();
 				
+				//увеличиваем длины векторов на значение скорости после удара
 				vectorSpeed1 = vectorSpeed1.multiply(currentSpeed);
 				vectorSpeed2 = vectorSpeed2.multiply(currentSpeed);
-				
-				//vectorSpeed1.checkMax(10);
-				//vectorSpeed2.checkMax(10);
 				
 				fieldBalls[i].vx = vectorSpeed1.x;
 				fieldBalls[i].vy = vectorSpeed1.y;
 				
 				fieldBalls[j].vx = vectorSpeed2.x;
 				fieldBalls[j].vy = vectorSpeed2.y;
-
+				
+				//расталкиваем шары вдоль оси соединяющие их центры
 				axis1.normalize();
 				axis2.normalize();
 				
@@ -277,31 +301,44 @@ function calculatePositions(){
 	}
 }
 
-function checkMaxBallSpeed(){
+function checkMinBallSpeed(){
 	for(i = 0; i < countFieldBalls; i++){
 		var speedVector = new vector2D(fieldBalls[i].vx, fieldBalls[i].vy);
-		speedVector.checkMax(9);
+		speedVector.checkMin(1);
 		fieldBalls[i].vx = speedVector.x;
 		fieldBalls[i].vy = speedVector.y;
 	}
 }
 
+function checkMaxBallSpeed(){
+	for(i = 0; i < countFieldBalls; i++){
+		var speedVector = new vector2D(fieldBalls[i].vx, fieldBalls[i].vy);
+		speedVector.checkMax(7);
+		fieldBalls[i].vx = speedVector.x;
+		fieldBalls[i].vy = speedVector.y;
+	}
+}
+
+//функция для произведения всех расчетов
 function calculate(){
 	calculatePositions();
 	calculateCollisionWithBorders();
 	calculateCollisionBallsWithBalls();
 	calculateCollisionsBallsWithBallsIntoStore();
 	checkMaxBallSpeed();
+	checkMinBallSpeed();
 }
 
 function initStore(){
-	
-	for(i=0; i<5; i++){
-		storeBalls[i] = new Ball(15, xStore + i * 20 + 20 , yStore + i * 20 + 20, 0.1, 0.1);
+	var count = Math.random()*20 % 11 + 5;
+	for(i=0; i<count; i++){
+		storeBalls[i] = new Ball(30, xStore + widhtStore/2 + Math.random(), yStore + heightStore/2 + Math.random(), 0.1, 0.1);
+		//storeBalls[i] = new Ball(30, -100 , -, 0.1, 0.1);
 		countStoreBalls++;
 	}
 }
 
+//рисование всего холста
 function drawCanvas(){
 	Context.strokeRect(0, 0, widthCanvas, heightCanvas);
 	if(draggedBall != null){
@@ -309,6 +346,7 @@ function drawCanvas(){
 	}
 }
 
+//рисование первой области
 function drawField(){
 	Context.strokeRect(xField, yField, widthField, heightField);
 	
@@ -317,6 +355,7 @@ function drawField(){
 	}
 }
 
+//рисование второй области
 function drawStore(){
 	Context.strokeRect(xStore, yStore, widhtStore, heightStore);
 	
@@ -325,15 +364,16 @@ function drawStore(){
 	}
 }
 
+//рисование джостика
 function drawMenu(){
 	Context.strokeRect(xMenu, yMenu, widthMenu, heightMenu);
 	
 	Context.beginPath();
-	Context.arc(xMenu + widthMenu / 2, yMenu + heightMenu / 3, 100, 0, 2 * Math.PI, false);
+	Context.arc(xMenu + widthMenu / 2, yMenu + heightMenu / 2, 100, 0, 2 * Math.PI, false);
 	Context.stroke();
 	
 	Context.beginPath();
-	Context.arc(xMenu + widthMenu / 2, yMenu + heightMenu / 3, 5, 0, 2 * Math.PI, false);
+	Context.arc(xMenu + widthMenu / 2, yMenu + heightMenu / 2, 5, 0, 2 * Math.PI, false);
 	Context.stroke();
 	
 	if(allocatedBall != null && stickAllocated != 1){
@@ -342,14 +382,14 @@ function drawMenu(){
 		vector.normalize();
 		vector = vector.multiply(speed);
 		xStick = vector.x + xMenu + widthMenu / 2;
-		yStick = vector.y + yMenu + heightMenu / 3;
+		yStick = vector.y + yMenu + heightMenu / 2;
 		Context.beginPath();
-		Context.arc(xStick, yStick, 10, 0, 2 * Math.PI, false);
+		Context.arc(xStick, yStick, 20, 0, 2 * Math.PI, false);
 		Context.fill();
 	}
 	else{
 		Context.beginPath();
-		Context.arc(xStick, yStick, 10, 0, 2 * Math.PI, false);
+		Context.arc(xStick, yStick, 20, 0, 2 * Math.PI, false);
 		Context.fill();
 	}
 }
@@ -376,22 +416,17 @@ function clear(){
 	Context.clearRect(0, 0, width, height);
 }
 
-function render(){
-	clear();
-	calculate();
-	draw();
-}
-
 function mouseDownHandler(event){
 	//костыль для указателя мыши, ибо приходящая в событии находится не на кончике стрелки на экране
 	var mouseX = event.clientX - 7;
 	var mouseY = event.clientY - 7;
-	
+	//проверяем, нажали ли на шар во второй области
 	for(i = 0; i < countStoreBalls; i++){
 		var xBall = storeBalls[i].x;
 		var yBall = storeBalls[i].y;
 		var rBall = storeBalls[i].r;
 		
+		//если нажали,, то выделяем его и удаляем из очереди на обработку столкновений
 		if( Math.pow((mouseX - xBall),2) + Math.pow((mouseY - yBall),2) <= Math.pow(rBall,2) ){
 			draggedBall = storeBalls[i];
 			allocatedBall = storeBalls[i];
@@ -400,12 +435,12 @@ function mouseDownHandler(event){
 			break;
 		}
 	}
-	
+	//проверяем, нажали ли на шар в первой области
 	for(i = 0; i < countFieldBalls; i++){
 		var xBall = fieldBalls[i].x;
 		var yBall = fieldBalls[i].y;
 		var rBall = fieldBalls[i].r;
-		
+		//если нажали,, то выделяем его и удаляем из очереди на обработку столкновений
 		if( Math.pow((mouseX - xBall),2) + Math.pow((mouseY - yBall),2) <= Math.pow(rBall,2) ){
 			draggedBall = fieldBalls[i];
 			allocatedBall = fieldBalls[i];;
@@ -415,7 +450,8 @@ function mouseDownHandler(event){
 		}
 	}
 	
-	if( Math.pow((mouseX - xStick),2) + Math.pow((mouseY - yStick),2) <= Math.pow(10,2) ){
+	//если нажали на джостик, то ставим переменную уведомляющую об этом в единицу
+	if( Math.pow((mouseX - xStick),2) + Math.pow((mouseY - yStick),2) <= Math.pow(20,2) ){
 		stickAllocated = 1;
 	}
 	
@@ -447,11 +483,12 @@ function mouseMoveHandler(event){
 	}
 }
 
+//проверка, где отпустили клавишу мыши с шариком
 function mouseUpHandler(event){
 	if(draggedBall != null){
 		var xBall = draggedBall.x;
 		var yBall = draggedBall.y;
-		
+		//если отпустили над первой областью то добавляем шар в очередь
 		if( ((xBall >= xField) && (xBall <= xField + widthField)) && ((yBall >= yField) && (yBall <= yField + heightField)) ){
 			fieldBalls[countFieldBalls] = draggedBall;
 			countFieldBalls++;
@@ -459,6 +496,7 @@ function mouseUpHandler(event){
 			  
 		  }
 		else{
+			//если отпустили над второй областью то добавляем шар в очередь, меняем его скорость 
 			if(((xBall >= xStore) && (xBall <= xStore + widhtStore)) && ((yBall >= yStore) && (yBall <= yStore + heightStore))){
 				draggedBall.vx = 0.1;
 				draggedBall.vy = 0.1;
@@ -467,7 +505,7 @@ function mouseUpHandler(event){
 				draggedBall = null;
 			}
 			else{
-				
+				//если отпустили ни над одной из областей, то добавляем шар в очередь во вторую область, устанавливаем координаты 
 				draggedBall.x = xStore + widhtStore/2 + Math.random();
 				draggedBall.y = yStore + heightStore/2 + Math.random();
 				storeBalls[countStoreBalls] = draggedBall;
@@ -480,6 +518,13 @@ function mouseUpHandler(event){
 	if(stickAllocated == 1){
 		stickAllocated = 0;
 	}
+}
+
+//Основной цикл
+function render(){
+	clear();
+	calculate();
+	draw();
 }
 
 Canvas.onmousedown = mouseDownHandler;
