@@ -64,23 +64,34 @@ function vector2D(x, y){
 	
 	var self = this;
 	
-	function length(){
-		return Math.sqrt( pow(self.x, 2) + pow(self.y, 2));
+	this.length = function(){
+		return Math.sqrt( Math.pow(self.x, 2) + Math.pow(self.y, 2));
 	}
 	
-	function scalarMultiply(vector){
+	this.scalarMultiply = function(vector){
 		return (self.x * vector.x + self.y + vector.y);
 	}
 	
-	function cosAngle(vector){
+	this.cosAngle = function(vector){
 		return ((self.length() * vector.length()) / self.scalarMultiply(vector))	
 	}
 	
-	function normalize(){
+	this.normalize = function(){
 		var length = self.length();
 		self.x = self.x / length;
 		self.y = self.y / length;
 	}
+	
+	this.multiply = function(value){
+		var result = new vector2D(self.x * value, self.y * value)
+		return result;
+	}
+	
+	this.plus = function(vector){
+		var result = new vector2D(self.x + vector.x, self.y + vector.y)
+		return result;
+	}
+	
 }
 
 function calculateCollisionWithBorders(){
@@ -118,35 +129,50 @@ function calculateCollisionWithBorders(){
 function calculateCollisionBallsWithBalls(){
 	for(i = 0; i < countFieldBalls; i++){
 		
-		for(j = i + 1; j < countFieldBalls; j++){
-			
+		for(j = i + 1; j < countFieldBalls; j++){	
 			var xBall1 = fieldBalls[i].x;
 			var yBall1 = fieldBalls[i].y;
 			var rBall1 = fieldBalls[i].r;
-			var speed1 = vector2D(fieldBalls[i].vx, fieldBalls[i].vy);
+			var speed1 = new vector2D(fieldBalls[i].vx, fieldBalls[i].vy);
 			
 			var xBall2 = fieldBalls[j].x;
 			var yBall2 = fieldBalls[j].y;
 			var rBall2 = fieldBalls[j].r;
-			var speed2 = vector2D(fieldBalls[j].vx, fieldBalls[j].vy);
+			var speed2 = new vector2D(fieldBalls[j].vx, fieldBalls[j].vy);
 			
 			var requiredDistanse = rBall1 + rBall2;
-			var currentDistanse = Math.sqrt( pow((xBall1 - xBall2), 2) + pow((yBall1 - yBall2), 2)); 
+			var currentDistanse = Math.sqrt( Math.pow((xBall1 - xBall2), 2) + Math.pow((yBall1 - yBall2), 2)); 
 			
 			if(currentDistanse <= requiredDistanse){
-				var axis = vector2D(xBall1-xBall2, yBall1-yBall2);
-				var speed = vector2D(fieldBalls[i].vx + fieldBalls[j].vx, fieldBalls[i].vy + fieldBalls[j].vy).length();
-				var cosAngle = speed1.cosAngle(speed2);
+				var axis2 = (new vector2D(xBall2-xBall1, yBall2-yBall1));
+				var axis1 = (new vector2D(xBall1-xBall2, yBall1-yBall2));
 				
-				if( cosAngle > ((Math.PI)/2) ){
-					
-					
-					
-				}
-				else{
-					
-					
-				}
+				var currentSpeedVector = speed1.plus(speed2);
+				var currentSpeed = currentSpeedVector.length();
+				
+				var vectorSpeed1 = speed1.plus(axis1);
+				vectorSpeed1.normalize(); 
+				
+				var vectorSpeed2 = speed2.plus(axis2);
+				vectorSpeed2.normalize();
+				
+				vectorSpeed1 = vectorSpeed1.multiply(currentSpeed);
+				vectorSpeed2 = vectorSpeed2.multiply(currentSpeed);
+				
+				fieldBalls[i].vx = vectorSpeed1.x;
+				fieldBalls[i].vy = vectorSpeed1.y;
+				
+				fieldBalls[j].vx = vectorSpeed2.x;
+				fieldBalls[j].vy = vectorSpeed2.y;
+
+				axis1.normalize();
+				axis2.normalize();
+				
+				fieldBalls[i].x += axis1.x * 2;
+				fieldBalls[i].y += axis1.y * 2;
+				
+				fieldBalls[j].x += axis2.x * 2;
+				fieldBalls[j].y += axis2.y * 2;
 			}
 		}
 	}
@@ -162,6 +188,7 @@ function calculatePositions(){
 function calculate(){
 	calculatePositions();
 	calculateCollisionWithBorders();
+	calculateCollisionBallsWithBalls();
 }
 
 function initStore(){
