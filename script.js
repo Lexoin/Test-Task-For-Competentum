@@ -468,8 +468,8 @@ function mouseUpHandler(event){
 			}
 			else{
 				
-				draggedBall.x = xStore + widhtStore/2;
-				draggedBall.y = yStore + heightStore/2;
+				draggedBall.x = xStore + widhtStore/2 + Math.random();
+				draggedBall.y = yStore + heightStore/2 + Math.random();
 				storeBalls[countStoreBalls] = draggedBall;
 				countStoreBalls++;
 				draggedBall = null;
