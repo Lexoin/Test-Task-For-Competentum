@@ -109,11 +109,11 @@ function vector2D(x, y){
 			self.x = -maxValue;
 		}
 		
-		if(self.x > maxValue){
-			self.x = maxValue;
+		if(self.y > maxValue){
+			self.y = maxValue;
 		}
-		if(self.x < -maxValue){
-			self.x = -maxValue;
+		if(self.y < -maxValue){
+			self.y = -maxValue;
 		}
 	}
 }
@@ -280,7 +280,7 @@ function calculatePositions(){
 function checkMaxBallSpeed(){
 	for(i = 0; i < countFieldBalls; i++){
 		var speedVector = new vector2D(fieldBalls[i].vx, fieldBalls[i].vy);
-		speedVector.checkMax(10);
+		speedVector.checkMax(9);
 		fieldBalls[i].vx = speedVector.x;
 		fieldBalls[i].vy = speedVector.y;
 	}
@@ -297,7 +297,7 @@ function calculate(){
 function initStore(){
 	
 	for(i=0; i<5; i++){
-		storeBalls[i] = new Ball(15, xStore + i * 20 + 20 , yStore + i * 20 + 20, 1, 1);
+		storeBalls[i] = new Ball(15, xStore + i * 20 + 20 , yStore + i * 20 + 20, 0.1, 0.1);
 		countStoreBalls++;
 	}
 }
@@ -394,7 +394,7 @@ function mouseDownHandler(event){
 		
 		if( Math.pow((mouseX - xBall),2) + Math.pow((mouseY - yBall),2) <= Math.pow(rBall,2) ){
 			draggedBall = storeBalls[i];
-			allocatedBall = storeBalls[i];;
+			allocatedBall = storeBalls[i];
 			storeBalls.splice(i, 1);
 			countStoreBalls--;
 			break;
@@ -460,8 +460,8 @@ function mouseUpHandler(event){
 		  }
 		else{
 			if(((xBall >= xStore) && (xBall <= xStore + widhtStore)) && ((yBall >= yStore) && (yBall <= yStore + heightStore))){
-				draggedBall.vx = 1;
-				draggedBall.vy = -1;
+				draggedBall.vx = 0.1;
+				draggedBall.vy = 0.1;
 				storeBalls[countStoreBalls] = draggedBall;
 				countStoreBalls++;
 				draggedBall = null;
