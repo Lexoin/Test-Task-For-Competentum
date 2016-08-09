@@ -332,7 +332,7 @@ function calculate(){
 function initStore(){
 	var count = Math.random()*20 % 11 + 5;
 	for(i=0; i<count; i++){
-		storeBalls[i] = new Ball(30, xStore + widhtStore/2 + Math.random(), yStore + heightStore/2 + Math.random(), 0.1, 0.1);
+		storeBalls[i] = new Ball(30, xStore + widhtStore/2 + Math.random(), yStore + heightStore/2 + Math.random(), 1, 1);
 		//storeBalls[i] = new Ball(30, -100 , -, 0.1, 0.1);
 		countStoreBalls++;
 	}
@@ -418,8 +418,8 @@ function clear(){
 
 function mouseDownHandler(event){
 	//костыль для указателя мыши, ибо приходящая в событии находится не на кончике стрелки на экране
-	var mouseX = event.clientX - 7;
-	var mouseY = event.clientY - 7;
+    var mouseX = event.pageX - 7;
+	var mouseY = event.pageY - 7;
 	//проверяем, нажали ли на шар во второй области
 	for(i = 0; i < countStoreBalls; i++){
 		var xBall = storeBalls[i].x;
@@ -460,19 +460,19 @@ function mouseDownHandler(event){
 function mouseMoveHandler(event){
 	
 	if(draggedBall != null){
-		draggedBall.x = event.clientX;
-		draggedBall.y = event.clientY;
+		draggedBall.x = event.pageX;
+		draggedBall.y = event.pageY;
 	}
 	
 	if(stickAllocated == 1){
-		if( Math.sqrt( Math.pow((event.clientX - xCenterStick), 2) + Math.pow((event.clientY - yCenterStick), 2)) < 100){
-			xStick = event.clientX;
-			yStick = event.clientY;
+	    if (Math.sqrt(Math.pow((event.pageX - xCenterStick), 2) + Math.pow((event.pageY - yCenterStick), 2)) < 100) {
+	        xStick = event.pageX;
+	        yStick = event.pageY;
 			allocatedBall.vx = (xStick - xCenterStick)/10;
 			allocatedBall.vy = (yStick - yCenterStick)/10;
 		}
 		else{
-			var vectorToCenterStick = new vector2D(event.clientX - xCenterStick, event.clientY - yCenterStick);
+	        var vectorToCenterStick = new vector2D(event.pageX - xCenterStick, event.pageY - yCenterStick);
 			vectorToCenterStick.normalize();
 			vectorToCenterStick = vectorToCenterStick.multiply(90);
 			xStick = vectorToCenterStick.x + xCenterStick;
@@ -498,8 +498,8 @@ function mouseUpHandler(event){
 		else{
 			//если отпустили над второй областью то добавляем шар в очередь, меняем его скорость 
 			if(((xBall >= xStore) && (xBall <= xStore + widhtStore)) && ((yBall >= yStore) && (yBall <= yStore + heightStore))){
-				draggedBall.vx = 0.1;
-				draggedBall.vy = 0.1;
+				draggedBall.vx = 1;
+				draggedBall.vy = 1;
 				storeBalls[countStoreBalls] = draggedBall;
 				countStoreBalls++;
 				draggedBall = null;
